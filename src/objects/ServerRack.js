@@ -190,9 +190,9 @@ export default class ServerRack {
 
   update(delta = 0) {
     this._elapsed += delta;
-    const base = 0.05;
-    const pulse = this.active ? 0.35 + Math.sin(this._elapsed * 3) * 0.25 : base;
-    this.frontMaterial.emissiveIntensity = Math.max(0, pulse);
+    const hoverBoost = this._hovered === 'cabinet' ? 0.35 : 0;
+    const pulse = this.active ? 0.35 + Math.sin(this._elapsed * 3) * 0.25 : 0.05;
+    this.frontMaterial.emissiveIntensity = Math.max(0, pulse + hoverBoost);
     this.panelMesh.material.emissiveIntensity = this.active ? 0.6 + Math.sin(this._elapsed * 3) * 0.2 : 0.35;
   }
 
@@ -272,7 +272,7 @@ export default class ServerRack {
     ctx.fillStyle = '#c9d1d9';
     const lines = [
       `Adapter: ${active.name || DEFAULT_ADAPTER.name}`,
-      `Host: ${active.host || '-'}:${active.port || '-'}`,
+      `Host: ${active.host || '-'}:${active.port ?? '-'}`,
       `State: ${active.status || 'offline'}`,
       `Uptime: ${this._formatUptime(active.uptime)}`,
     ];
@@ -296,8 +296,12 @@ export default class ServerRack {
     });
 
     this._buttons = [];
-    this._drawButton(ctx, 'Reconnect', 24, height - 90, width - 48, 44, 'reconnect');
-    this._drawButton(ctx, 'Switch adapter', 24, height - 34, width - 48, 44, 'switch');
+    const buttonHeight = 44;
+    const buttonGap = 12;
+    const buttonBottomPad = 20;
+    const buttonY = height - (buttonHeight * 2 + buttonGap + buttonBottomPad);
+    this._drawButton(ctx, 'Reconnect', 24, buttonY, width - 48, buttonHeight, 'reconnect');
+    this._drawButton(ctx, 'Switch adapter', 24, buttonY + buttonHeight + buttonGap, width - 48, buttonHeight, 'switch');
   }
 
   _drawButton(ctx, label, x, y, w, h, action) {
@@ -355,8 +359,6 @@ export default class ServerRack {
     }
 
     if (part !== this._hovered) {
-      if (this._hovered === 'cabinet') this.frontMaterial.emissiveIntensity = 0.05;
-      if (part === 'cabinet') this.frontMaterial.emissiveIntensity = 0.4;
       this._hovered = part || null;
     }
   }
