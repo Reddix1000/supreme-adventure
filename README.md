@@ -78,9 +78,13 @@ Methods:
   four `{ name, host, port, status, uptime }` objects. `status` is one of
   `'connected' | 'connecting' | 'error' | 'offline'`, mapped to LED colours
   green / amber / red / grey.
+- `.setGameplayState({ isBuilt, powered, connectedToGrid, powerDrain })` —
+  controls the rack's gameplay state. If the rack is not built yet, it is a
+  blueprint; if it has no power, it stays visible but offline; when built and
+  powered it behaves like a normal active server rack.
 - `.on(event, callback)` / `.off(event, callback)` — subscribe/unsubscribe
-  to `'reconnect'` and `'adapterChange'` events. Both are emit-only; no
-  network calls are made by the rack itself.
+  to `'reconnect'`, `'adapterChange'`, `'build'` and `'powerChange'` events.
+  Both are emit-only; no network calls are made by the rack itself.
 - `.update(delta)` — call every frame from your render loop to drive the
   emissive pulse animation while the active adapter is connected.
 - `.dispose()` — removes all DOM listeners and disposes every geometry,

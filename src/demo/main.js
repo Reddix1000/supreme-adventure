@@ -44,6 +44,21 @@ rack.setState({
   activeIndex: 0,
 });
 
+rack.setGameplayState({
+  isBuilt: true,
+  powered: false,
+  connectedToGrid: false,
+  powerDrain: 8,
+});
+
+rack.on('build', () => {
+  console.log('[ServerRack] built and ready for power');
+});
+
+rack.on('powerChange', ({ powered, connectedToGrid }) => {
+  console.log('[ServerRack] power state changed:', powered, connectedToGrid);
+});
+
 rack.on('reconnect', ({ adapter }) => {
   console.log('[ServerRack] reconnect requested for', adapter?.name);
 });
@@ -51,6 +66,10 @@ rack.on('reconnect', ({ adapter }) => {
 rack.on('adapterChange', ({ index, adapter }) => {
   console.log('[ServerRack] switched to adapter', index, adapter?.name);
 });
+
+setTimeout(() => {
+  rack.setGameplayState({ isBuilt: true, powered: true, connectedToGrid: true, powerDrain: 8 });
+}, 1200);
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
