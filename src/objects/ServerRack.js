@@ -36,7 +36,7 @@ export default class ServerRack {
     this.group = new THREE.Group();
     this.group.position.set(position.x || 0, position.y || 0, position.z || 0);
 
-    this._listeners = { reconnect: new Set(), adapterChange: new Set(), build: new Set(), powerChange: new Set() };
+    this._listeners = { reconnect: new Set(), disconnect: new Set(), adapterChange: new Set(), build: new Set(), powerChange: new Set() };
     this._geometries = [];
     this._materials = [];
     this._textures = [];
@@ -190,6 +190,15 @@ export default class ServerRack {
     return this;
   }
 
+  disconnect() {
+    this.setGameplayState({ connectedToGrid: false });
+    this._emit('disconnect', {
+      adapter: this.state.adapters[this.state.activeIndex],
+      index: this.state.activeIndex,
+    });
+    return this;
+  }
+
   on(event, callback) {
     if (this._listeners[event]) {
       this._listeners[event].add(callback);
@@ -217,6 +226,7 @@ export default class ServerRack {
     this.domElement.removeEventListener('pointermove', this._onPointerMove);
     this.domElement.removeEventListener('click', this._onClick);
     this._listeners.reconnect.clear();
+    this._listeners.disconnect.clear();
     this._listeners.adapterChange.clear();
     this._listeners.build.clear();
     this._listeners.powerChange.clear();
@@ -362,12 +372,18 @@ export default class ServerRack {
       return;
     }
 
-    if (!this.gameplay.powered || !this.gameplay.connectedToGrid) {
+    if (!this.gameplay.powered) {
       this._drawButton(ctx, 'Connect power', 24, buttonY, width - 48, buttonHeight, 'power');
       return;
     }
 
-    this._drawButton(ctx, 'Reconnect', 24, buttonY, width - 48, buttonHeight, 'reconnect');
+    if (!this.gameplay.connectedToGrid) {
+      this._drawButton(ctx, 'Reconnect', 24, buttonY, width - 48, buttonHeight, 'reconnect');
+      this._drawButton(ctx, 'Switch adapter', 24, buttonY + buttonHeight + buttonGap, width - 48, buttonHeight, 'switch');
+      return;
+    }
+
+    this._drawButton(ctx, 'Disconnect', 24, buttonY, width - 48, buttonHeight, 'disconnect');
     this._drawButton(ctx, 'Switch adapter', 24, buttonY + buttonHeight + buttonGap, width - 48, buttonHeight, 'switch');
   }
 
@@ -457,7 +473,10 @@ export default class ServerRack {
         this.setGameplayState({ powered: true, connectedToGrid: true });
         this._emit('powerChange', { powered: true, connectedToGrid: true, rack: this });
       } else if (button?.action === 'reconnect') {
+        this.setGameplayState({ connectedToGrid: true });
         this._emit('reconnect', { adapter: this.state.adapters[this.state.activeIndex] });
+      } else if (button?.action === 'disconnect') {
+        this.disconnect();
       } else if (button?.action === 'switch') {
         const count = this.state.adapters.length || 1;
         this.state.activeIndex = (this.state.activeIndex + 1) % count;

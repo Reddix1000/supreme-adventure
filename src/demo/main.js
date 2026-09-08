@@ -59,6 +59,10 @@ rack.on('powerChange', ({ powered, connectedToGrid }) => {
   console.log('[ServerRack] power state changed:', powered, connectedToGrid);
 });
 
+rack.on('disconnect', ({ adapter, index }) => {
+  console.log('[ServerRack] disconnected from grid:', index, adapter?.name);
+});
+
 rack.on('reconnect', ({ adapter }) => {
   console.log('[ServerRack] reconnect requested for', adapter?.name);
 });
