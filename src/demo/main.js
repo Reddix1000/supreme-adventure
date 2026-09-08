@@ -3,6 +3,31 @@ import ServerRack from '../objects/ServerRack.js';
 
 const app = document.querySelector('#app');
 
+const terminal = document.createElement('div');
+terminal.className = 'terminal';
+terminal.innerHTML = `
+  <div class="terminal-header">
+    <span class="terminal-title">rack-sys</span>
+    <span class="terminal-prompt">root@node:~$</span>
+  </div>
+  <div class="terminal-body">
+    <div class="terminal-line"><strong>status:</strong> <span id="terminal-status">offline</span></div>
+    <div class="terminal-line"><strong>power:</strong> <span id="terminal-power">unpowered</span></div>
+    <div class="terminal-line"><strong>grid:</strong> <span id="terminal-grid">disconnected</span></div>
+    <div class="terminal-actions">
+      <button class="terminal-button" data-action="build">build rack</button>
+      <button class="terminal-button" data-action="power">power on</button>
+      <button class="terminal-button" data-action="disconnect">disconnect</button>
+      <button class="terminal-button" data-action="reconnect">reconnect</button>
+    </div>
+  </div>
+`;
+document.body.appendChild(terminal);
+
+const statusEl = document.getElementById('terminal-status');
+const powerEl = document.getElementById('terminal-power');
+const gridEl = document.getElementById('terminal-grid');
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x11141a);
 
@@ -51,29 +76,57 @@ rack.setGameplayState({
   powerDrain: 8,
 });
 
+const updateTerminalLabels = () => {
+  statusEl.textContent = rack.gameplay.isBuilt ? (rack.gameplay.powered && rack.gameplay.connectedToGrid ? 'online' : 'offline') : 'unbuilt';
+  powerEl.textContent = rack.gameplay.powered ? 'powered' : 'unpowered';
+  gridEl.textContent = rack.gameplay.connectedToGrid ? 'connected' : 'disconnected';
+};
+
 rack.on('build', () => {
   console.log('[ServerRack] built and ready for power');
+  updateTerminalLabels();
 });
 
 rack.on('powerChange', ({ powered, connectedToGrid }) => {
   console.log('[ServerRack] power state changed:', powered, connectedToGrid);
+  updateTerminalLabels();
 });
 
 rack.on('disconnect', ({ adapter, index }) => {
   console.log('[ServerRack] disconnected from grid:', index, adapter?.name);
+  updateTerminalLabels();
 });
 
 rack.on('reconnect', ({ adapter }) => {
   console.log('[ServerRack] reconnect requested for', adapter?.name);
+  updateTerminalLabels();
 });
 
 rack.on('adapterChange', ({ index, adapter }) => {
   console.log('[ServerRack] switched to adapter', index, adapter?.name);
 });
 
-setTimeout(() => {
-  rack.setGameplayState({ isBuilt: true, powered: true, connectedToGrid: true, powerDrain: 8 });
-}, 1200);
+updateTerminalLabels();
+
+terminal.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-action]');
+  if (!button) return;
+
+  const action = button.dataset.action;
+  if (action === 'build') {
+    rack.setGameplayState({ isBuilt: true, powered: false, connectedToGrid: false });
+  }
+  if (action === 'power') {
+    rack.setGameplayState({ powered: true, connectedToGrid: true });
+  }
+  if (action === 'disconnect') {
+    rack.disconnect();
+  }
+  if (action === 'reconnect') {
+    rack.setGameplayState({ connectedToGrid: true });
+  }
+  updateTerminalLabels();
+});
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
