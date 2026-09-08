@@ -96,7 +96,7 @@ export default class ServerRack {
     this._geometries.push(frontGeometry);
     this._materials.push(this.frontMaterial);
     this.frontMesh = new THREE.Mesh(frontGeometry, this.frontMaterial);
-    this.frontMesh.position.z = CABINET_DEPTH / 2 - PANEL_INSET;
+    this.frontMesh.position.z = CABINET_DEPTH / 2 - PANEL_INSET - 0.015;
     this.frontMesh.userData.rackPart = 'cabinet';
     this.group.add(this.frontMesh);
   }
@@ -160,8 +160,10 @@ export default class ServerRack {
     this._materials.push(panelMaterial);
 
     this.panelMesh = new THREE.Mesh(panelGeometry, panelMaterial);
-    this.panelMesh.position.set(0, 0.55, CABINET_DEPTH / 2 - PANEL_INSET + 0.03);
+    this.panelMesh.position.set(0, 0.55, CABINET_DEPTH / 2 - PANEL_INSET + 0.09);
     this.panelMesh.userData.rackPart = 'panel';
+    this.panelMesh.renderOrder = 10;
+    this.panelMesh.material.depthTest = false;
     this.group.add(this.panelMesh);
     this._buttons = [];
   }
